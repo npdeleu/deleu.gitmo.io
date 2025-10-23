@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Department KPI Dashboard</title>
+    <!-- Load Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Lucide Icons Library (for non-React use) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Custom font import: Inter for body, Bebas Neue for an aggressive title style */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Bebas+Neue&display=swap');
+        body {
+            font-family: 'Inter', sans-serif; /* Default body font remains Inter for readability */
+            background-color: #f9fafb;
+        }
+        /* Apply "aggressive" font to main titles and department titles */
+        h1, h2 { 
+            font-family: 'Bebas Neue', sans-serif;
+            letter-spacing: 0.05em; /* Added spacing for impact */
+        }
+    </style>
+</head>
+<body onload="initDashboard()">
+    <div id="app-root" class="min-h-screen bg-gray-50 p-4 sm:p-8 font-sans">
+        <!-- Content will be rendered here by JavaScript -->
+    </div>
+
+    <script>
+        // --- DATA STRUCTURE ---
+
+        const allLocationData = {
+            'Mishawaka': [ 
+                {
+                    id: 1, department: "Emergency", colorClass: "text-red-700",
+                    production: { current: 15500, ttmAvg: 14200, unit: '$' },
+                    volume: { 
+                        unit: 'Appts', scheduled: { current: 5, ttmAvg: 8 },
+                        sameDay: { current: 50, ttmAvg: 45 }, walkIn: { current: 30, ttmAvg: 25 }
+                    },
+                },
+                {
+                    id: 2, department: "Hygiene", colorClass: "text-green-700",
+                    production: { current: 48200, ttmAvg: 51000, unit: '$' },
+                    volume: {
+                        unit: 'Appts', scheduled: { current: 280, ttmAvg: 295 },
+                        sameDay: { current: 5, ttmAvg: 10 },
+                    },
+                },
+                {
+                    id: 3, department: "Operative", colorClass: "text-blue-700",
+                    production: { current: 32100, ttmAvg: 31500, unit: '$' },
+                    volume: {
+                        unit: 'Appts', scheduled: { current: 145, ttmAvg: 150 },
+                        sameDay: { current: 10, ttmAvg: 10 },
+                    },
+                },
+                {
+                    id: 4, department: "Denture", colorClass: "text-yellow-700",
+                    production: { current: 8900, ttmAvg: 9500, unit: '$' },
+                    volume: {
+                        unit: 'Cases', scheduled: { current: 17, ttmAvg: 20 },
+                        sameDay: { current: 1, ttmAvg: 2 },
+                    },
+                },
+                {
+                    id: 5, department: "Surgery", colorClass: "text-purple-700",
+                    production: { current: 19400, ttmAvg: 17300, unit: '$' },
+                    volume: {
+                        unit: 'Cases', scheduled: { current: 35, ttmAvg: 30 },
+                        sameDay: { current: 7, ttmAvg: 8 },
+                    },
+                },
+                {
+                    id: 6, department: "Orthodontics", colorClass: "text-indigo-700",
+                    production: { current: 27600, ttmAvg: 26500, unit: '$' },
+                    volume: {
+                        unit: 'Appts', scheduled: { current: 63, ttmAvg: 68 },
+                        sameDay: { current: 2, ttmAvg: 2 },
+                    },
+                },
+                {
+                    id: 7, department: "Evaluations", colorClass: "text-pink-700",
+                    production: { current: 6300, ttmAvg: 5900, unit: '$' },
+                    volume: {
+                        unit: 'Appts', scheduled: { current: 90, ttmAvg: 85 },
+                        sameDay: { current: 30, ttmAvg: 30 },
+                    },
+                },
+                {
+                    id: 8, department: "Sleep", colorClass: "text-teal-700",
+                    production: { current: 4500, ttmAvg: 3800, unit: '$' },
+                    volume: {
+                        unit: 'Cases', scheduled: { current: 14, ttmAvg: 11 },
+                        sameDay: { current: 1, ttmAvg: 1 },
+                    },
+                },
+            ],
+            'Fort Wayne': [ 
+                {
+                    id: 9, department: "Emergency", colorClass: "text-red-700",
+                    production: { current: 18000, ttmAvg: 16500, unit: '$' },
+                    volume: { unit: 'Appts', scheduled: { current: 113, ttmAvg: 100 } }, 
+                },
+                {
+                    id: 10, department: "Hygiene", colorClass: "text-green-700",
+                    production: { current: 42000, ttmAvg: 45000, unit: '$' },
+                    volume: { unit: 'Appts', scheduled: { current: 260, ttmAvg: 272 } },
+                },
+                {
+                    id: 11, department: "Operative", colorClass: "text-blue-700",
+                    production: { current: 30000, ttmAvg: 28000, unit: '$' },
+                    volume: { unit: 'Appts', scheduled: { current: 138, ttmAvg: 152 } },
+                },
+                {
+                    id: 12, department: "Denture", colorClass: "text-yellow-700",
+                    production: { current: 9500, ttmAvg: 9000, unit: '$' },
+                    volume: { unit: 'Cases', scheduled: { current: 22, ttmAvg: 19 } },
+                },
+                {
+                    id: 13, department: "Surgery", colorClass: "text-purple-700",
+                    production: { current: 17000, ttmAvg: 18500, unit: '$' },
+                    volume: { unit: 'Cases', scheduled: { current: 35, ttmAvg: 41 } },
+                },
+                {
+                    id: 14, department: "Orthodontics", colorClass: "text-indigo-700",
+                    production: { current: 28500, ttmAvg: 27000, unit: '$' },
+                    volume: { unit: 'Appts', scheduled: { current: 71, ttmAvg: 66 } },
+                },
+                {
+                    id: 15, department: "Evaluations", colorClass: "text-pink-700",
+                    production: { current: 6000, ttmAvg: 6200, unit: '$' },
+                    volume: { unit: 'Appts', scheduled: { current: 110, ttmAvg: 118 } },
+                },
+                {
+                    id: 16, department: "Sleep", colorClass: "text-teal-700",
+                    production: { current: 3900, ttmAvg: 4000, unit: '$' },
+                    volume: { unit: 'Cases', scheduled: { current: 12, ttmAvg: 14 } },
+                },
+            ],
+        };
+
+        /**
+         * Aggregates production and volume data across all locations by department.
+         * Adds the resulting aggregated data under the 'Company Total' key in allLocationData.
+         */
+        const aggregateCompanyTotalData = () => {
+            const companyTotalData = {};
+            const sourceLocations = ['Mishawaka', 'Fort Wayne'];
+
+            // 1. Iterate through all source location data
+            for (const location of sourceLocations) {
+                const departments = allLocationData[location];
+
+                for (const dept of departments) {
+                    const deptName = dept.department;
+
+                    if (!companyTotalData[deptName]) {
+                        // Initialize with production and a single 'scheduled' volume metric 
+                        companyTotalData[deptName] = {
+                            id: dept.id, 
+                            department: deptName,
+                            colorClass: dept.colorClass,
+                            production: { current: 0, ttmAvg: 0, unit: dept.production.unit },
+                            volume: {
+                                unit: dept.volume.unit,
+                                scheduled: { current: 0, ttmAvg: 0 },
+                            }
+                        };
+                    }
+
+                    const totalDept = companyTotalData[deptName];
+
+                    // 1. Sum Production
+                    totalDept.production.current += dept.production.current;
+                    totalDept.production.ttmAvg += dept.production.ttmAvg;
+
+                    // 2. Sum ALL Volume components (scheduled, sameDay, walkIn) into the 'scheduled' field 
+                    
+                    // Current Total Volume
+                    let currentTotalVolume = dept.volume.scheduled.current;
+                    if (dept.volume.sameDay) currentTotalVolume += dept.volume.sameDay.current;
+                    if (dept.volume.walkIn) currentTotalVolume += dept.volume.walkIn.current;
+                    
+                    // TTM Average Total Volume
+                    let ttmAvgTotalVolume = dept.volume.scheduled.ttmAvg;
+                    if (dept.volume.sameDay) ttmAvgTotalVolume += dept.volume.sameDay.ttmAvg;
+                    if (dept.volume.walkIn) ttmAvgTotalVolume += dept.volume.walkIn.ttmAvg;
+                    
+                    totalDept.volume.scheduled.current += currentTotalVolume;
+                    totalDept.volume.scheduled.ttmAvg += ttmAvgTotalVolume;
+                }
+            }
+
+            // Convert aggregated object back into an array and add it to allLocationData
+            allLocationData['Company Total'] = Object.values(companyTotalData);
+        };
+
+        // Call the aggregation function immediately after defining the source data
+        aggregateCompanyTotalData();
+
+        // Now that aggregation is complete, define the location list
+        const locationIds = Object.keys(allLocationData);
+        let selectedLocation = locationIds[0]; // Default to 'Mishawaka'
+
+
+        // --- UTILITY FUNCTIONS (Plain JS) ---
+
+        /**
+         * Calculates percentage change and determines the trend icon/color.
+         */
+        const calculateTrend = (current, ttmAvg) => {
+            const diff = current - ttmAvg;
+            const change = ttmAvg === 0 ? 0 : (diff / ttmAvg) * 100;
+            const changeString = `${Math.abs(change).toFixed(1)}%`;
+            let TrendIcon = 'divide';
+
+            if (change > 0.01) {
+                return { change: `+${changeString}`, trendColor: 'text-green-500', TrendIcon: 'trending-up' };
+            } else if (change < -0.01) {
+                return { change: `-${changeString}`, trendColor: 'text-red-500', TrendIcon: 'trending-down' };
+            } else {
+                return { change: '0.0%', trendColor: 'text-gray-500', TrendIcon: 'maximize-2' }; // Using maximize-2 for neutral/flat
+            }
+        };
+
+        /**
+         * Generates the HTML string for a single Department Card.
+         */
+        const createDepartmentCard = (data) => {
+            // Removed 'description' from destructuring
+            const { department, colorClass, production, volume } = data;
+            
+            // New Logic: Check if the data has a volume breakdown (sameDay property present)
+            const isDetailedVolume = volume.sameDay !== undefined;
+
+            // Production Trend
+            const prodMetrics = calculateTrend(production.current, production.ttmAvg);
+            const formattedProduction = `${production.unit}${production.current.toLocaleString()}`;
+
+            let volumeContent;
+            
+            if (isDetailedVolume) {
+                // Detailed View (Mishawaka uses this path)
+                
+                // Calculate Total Volume for this card
+                const totalCurrentVolume = volume.scheduled.current + volume.sameDay.current + (volume.walkIn ? volume.walkIn.current : 0);
+                const totalTtmAvgVolume = volume.scheduled.ttmAvg + volume.sameDay.ttmAvg + (volume.walkIn ? volume.walkIn.ttmAvg : 0);
+                const totalMetrics = calculateTrend(totalCurrentVolume, totalTtmAvgVolume);
+
+                const schedMetrics = calculateTrend(volume.scheduled.current, volume.scheduled.ttmAvg);
+                const sameDayMetrics = calculateTrend(volume.sameDay.current, volume.sameDay.ttmAvg);
+                // walkInMetrics will only be calculated if volume.walkIn exists (i.e., Emergency)
+                const walkInMetrics = volume.walkIn ? calculateTrend(volume.walkIn.current, volume.walkIn.ttmAvg) : null;
+
+                const createSubMetric = (title, current, ttmAvg, metrics, isLast = false) => `
+                    <div class="${isLast ? 'pt-1' : 'border-b border-dashed pb-2'}">
+                        <h4 class="text-sm font-semibold text-gray-800">${title}: ${current.toLocaleString()}</h4>
+                        <div class="mt-0.5 text-xs">
+                            <span class="font-bold ${metrics.trendColor} flex items-center">
+                                <i data-lucide="${metrics.TrendIcon}" class="w-3 h-3 mr-1"></i>
+                                ${metrics.change} 
+                            </span>
+                            <span class="text-gray-500"> vs. TTM Avg (${ttmAvg.toLocaleString()})</span>
+                        </div>
+                    </div>
+                `;
+
+                // Logic to determine if Same Day is the last metric to style it correctly
+                const isSameDayLast = !volume.walkIn;
+
+                volumeContent = `
+                    <div class="flex flex-col">
+                        <!-- 1. Total Volume Summary -->
+                        <div class="pb-3 border-b border-gray-200 mb-4">
+                            <div class="flex items-center text-sm font-semibold text-gray-600 mb-1">
+                                <!-- UPDATED: Changed label from 'Total Appt. Volume' to 'Total Patient Volume' and icon to 'users' -->
+                                <i data-lucide="users" class="w-4 h-4 mr-1 text-indigo-600"></i>
+                                Total Patient Volume (${volume.unit})
+                            </div>
+                            <!-- Reduced font size to 2xl to better fit next to production metric -->
+                            <h3 class="text-2xl font-extrabold text-gray-900 leading-none">${totalCurrentVolume.toLocaleString()}</h3>
+                            <div class="mt-1 text-xs">
+                                <span class="font-bold ${totalMetrics.trendColor} flex items-center">
+                                    <i data-lucide="${totalMetrics.TrendIcon}" class="w-3 h-3 mr-1"></i>
+                                    ${totalMetrics.change} 
+                                </span>
+                                <span class="text-gray-500"> vs. TTM Avg (${totalTtmAvgVolume.toLocaleString()})</span>
+                            </div>
+                        </div>
+
+                        <!-- 2. Volume Breakdown -->
+                        <div class="flex flex-col space-y-3">
+                            <div class="flex items-center text-sm font-semibold text-gray-600">
+                                <i data-lucide="list" class="w-4 h-4 mr-1 text-indigo-500"></i>
+                                Volume Breakdown
+                            </div>
+                            ${createSubMetric('Scheduled', volume.scheduled.current, volume.scheduled.ttmAvg, schedMetrics)}
+                            ${createSubMetric('Same Day', volume.sameDay.current, volume.sameDay.ttmAvg, sameDayMetrics, isSameDayLast)}
+                            ${volume.walkIn ? createSubMetric('Walk In', volume.walkIn.current, volume.walkIn.ttmAvg, walkInMetrics, true) : ''}
+                        </div>
+                    </div>
+                `;
+
+            } else {
+                // Total Volume View (Fort Wayne and Company Total use this path)
+                const totalMetrics = calculateTrend(volume.scheduled.current, volume.scheduled.ttmAvg);
+                
+                // For Company Total and Fort Wayne, volume.scheduled.current is the TOTAL volume.
+                const title = (selectedLocation === 'Company Total') ? 'Total Patient Volume' : 'Total Patient Volume';
+
+                volumeContent = `
+                    <div class="pt-2">
+                        <div class="flex items-center text-sm font-semibold text-gray-600 mb-1">
+                            <i data-lucide="users" class="w-4 h-4 mr-1 text-indigo-500"></i>
+                            ${title} (${volume.unit})
+                        </div>
+                        <h3 class="text-3xl font-extrabold text-gray-900 leading-none">${volume.scheduled.current.toLocaleString()}</h3>
+                        <div class="mt-1 text-xs">
+                            <span class="font-bold ${totalMetrics.trendColor} flex items-center">
+                                <i data-lucide="${totalMetrics.TrendIcon}" class="w-3 h-3 mr-1"></i>
+                                ${totalMetrics.change} 
+                            </span>
+                            <span class="text-gray-500"> vs. TTM Avg (${volume.scheduled.ttmAvg.toLocaleString()})</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Return the full card HTML structure
+            return `
+                <div class="bg-white p-6 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl border border-gray-100 flex flex-col">
+                    
+                    <!-- UPDATED: Centered title and increased size to 2xl for impact -->
+                    <div class="border-b pb-3 mb-4">
+                        <h2 class="text-2xl text-center ${colorClass}">${department}</h2>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 flex-grow">
+                        <!-- Metric 1: Production -->
+                        <div class="border-r pr-4">
+                            <div class="flex items-center text-sm font-semibold text-gray-600 mb-2">
+                                <i data-lucide="dollar-sign" class="w-4 h-4 mr-1 text-indigo-500"></i>
+                                Production
+                            </div>
+                            
+                            <h3 class="text-2xl font-extrabold text-gray-900">${formattedProduction}</h3>
+                            
+                            <div class="mt-1 text-xs">
+                                <span class="font-bold ${prodMetrics.trendColor} flex items-center">
+                                    <i data-lucide="${prodMetrics.TrendIcon}" class="w-3 h-3 mr-1"></i>
+                                    ${prodMetrics.change} 
+                                </span>
+                                <span class="text-gray-500"> vs. TTM Avg (${production.unit}${production.ttmAvg.toLocaleString()})</span>
+                            </div>
+                        </div>
+
+                        <!-- Metric 2: Volume -->
+                        ${volumeContent}
+                    </div>
+                </div>
+            `;
+        };
+
+
+        // --- RENDER FUNCTIONS ---
+
+        const renderDashboard = () => {
+            const appRoot = document.getElementById('app-root');
+            const kpis = allLocationData[selectedLocation];
+
+            // 1. Build Header
+            const headerHtml = `
+                <header class="flex justify-center items-center flex-col pb-6 border-b border-gray-200">
+                    <div class="flex flex-col items-center mb-4 sm:flex-row sm:mb-0 text-center sm:text-left">
+                        <!-- Logo -->
+                        <img 
+                            src="https://m.bbb.org/prod/ProfileImages/af8db630-8400-4f82-af5b-5967f0c5d5f4.png?tx=w_200" 
+                            onerror="this.onerror=null; this.src='https://placehold.co/48x48/4f46e5/ffffff?text=AD'"
+                            alt="Afdent Logo" 
+                            class="h-10 sm:h-12 mb-2 sm:mb-0 sm:mr-4 rounded-lg" 
+                        />
+                        <div>
+                            <!-- H1 will now use the Bebas Neue font from the style block -->
+                            <h1 class="text-3xl font-extrabold text-gray-900">Departmental Performance Dashboard</h1>
+                            <p class="text-gray-500 mt-1">Comparing Current Month figures to Trailing Twelve Month (TTM) Averages. (May 2024)</p>
+                        </div>
+                    </div>
+                    <!-- Refresh button removed as requested -->
+                </header>
+            `;
+
+            // 2. Build Navigation (Tabs)
+            const navHtml = `
+                <nav class="mt-6">
+                    <div class="flex justify-center max-w-7xl mx-auto">
+                        <div class="flex space-x-0 bg-white p-1 rounded-lg border border-gray-300 shadow-md overflow-x-auto" id="location-tabs">
+                            ${locationIds.map(location => `
+                                <button
+                                    onclick="changeLocation('${location}')"
+                                    class="px-4 py-2 transition duration-200 ease-in-out whitespace-nowrap rounded-md text-base
+                                    ${selectedLocation === location 
+                                        ? 'bg-indigo-600 text-white font-semibold shadow-inner' 
+                                        : 'text-gray-600 font-medium hover:bg-gray-100'
+                                    }"
+                                >
+                                    ${location}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div class="border-b border-gray-200 mt-8"></div>
+                </nav>
+            `;
+
+            // 3. Build KPI Grid
+            const kpiGridHtml = `
+                <section class="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2">
+                    ${kpis.map(data => createDepartmentCard(data)).join('')}
+                </section>
+            `;
+
+            // 4. Build Footer
+            const footerHtml = `
+                <footer class="mt-12 text-center text-sm text-gray-400 pt-6 border-t border-gray-200">
+                    Data last updated on May 31, 2024. Displaying data for **${selectedLocation}**.
+                </footer>
+            `;
+
+            // 5. Combine and Render
+            appRoot.innerHTML = `
+                <div class="max-w-7xl mx-auto">
+                    ${headerHtml}
+                    ${navHtml}
+                    ${kpiGridHtml}
+                    ${footerHtml}
+                </div>
+            `;
+            
+            // 6. Initialize Lucide Icons after rendering new content
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+        };
+
+        // --- HANDLERS ---
+
+        const changeLocation = (newLocation) => {
+            selectedLocation = newLocation;
+            renderDashboard();
+        };
+
+        // --- INITIALIZATION ---
+
+        const initDashboard = () => {
+            // Because the aggregation function is called in the global scope now, 
+            // we just need to render the dashboard on load.
+            renderDashboard();
+        };
+
+    </script>
+</body>
+</html>
