@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pod Performance Analysis Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom font import for a clean look */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fb; /* Light background */
+        }
+        .metric-bar {
+            height: 12px; /* Increased bar height */
+            border-radius: 9999px;
+            transition: width 0.5s ease-out;
+        }
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+        }
+        /* Color classes for better visualization */
+        .color-p1 { background-color: #10b981; } /* Emerald */
+        .color-p2 { background-color: #3b82f6; } /* Blue */
+        .color-p3 { background-color: #ef4444; } /* Red */
+
+        /* --- Print-Specific Styles --- */
+        @media print {
+            /* Now includes the header and KPI cards */
+
+            /* Reset body and app container for printing */
+            body {
+                background-color: #ffffff !important; /* Print on white */
+                padding: 0;
+                margin: 0;
+            }
+            
+            #app {
+                max-width: 100% !important;
+                margin: 0;
+                padding: 0;
+            }
+
+            /* Style the table section for printing */
+            section.bg-white {
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                padding: 1rem;
+                margin: 0;
+                width: 100%;
+                overflow-x: visible !important;
+            }
+
+            /* --- Force browser to print background colors --- */
+            .metric-bar, .bg-gray-100, .bg-gray-50, .bg-amber-200, .bg-gray-200 { 
+                -webkit-print-color-adjust: exact; /* Chrome, Safari, Edge */
+                print-color-adjust: exact; /* Firefox */
+            }
+            
+            /* Remove hover effects */
+            tr.hover\\:bg-indigo-50:hover {
+                --tw-bg-opacity: 1;
+                background-color: rgb(255 255 255 / var(--tw-bg-opacity)) !important;
+            }
+            
+            /* FIX: Ensure table layout is fixed and cell content wraps */
+            #metrics-table {
+                width: 100%;
+                table-layout: fixed !important; 
+            }
+
+            #metrics-table td, #metrics-table th {
+                white-space: normal !important; /* Override Tailwind's whitespace-nowrap */
+                word-break: break-word; /* Force long words/metrics to wrap */
+                padding-left: 0.5rem; /* Reduce padding for tighter print layout */
+                padding-right: 0.5rem; 
+            }
+            
+            /* Remove sticky header for print */
+            .bg-gray-200.sticky {
+                position: static !important;
+            }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <!-- Increased max width to make the dashboard feel higher resolution -->
+    <div id="app" class="max-w-[1400px] mx-auto"> 
+        <!-- Header -->
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-gray-800">POD Performance Dashboard</h1>
+            <p class="text-lg text-gray-500 mt-1">Comparative Analysis Across Pods 1, 2, & 3</p>
+        </header>
+
+        <!-- Detailed Metrics Table -->
+        <section class="bg-white p-8 rounded-xl card-shadow overflow-x-auto"> <!-- Increased padding to p-8 -->
+            <h2 class="text-2xl font-semibold text-gray-800 mb-6">Detailed Metrics Breakdown</h2> <!-- Increased margin -->
+            <div class="max-h-[75vh] overflow-y-auto rounded-lg border border-gray-200"> <!-- Increased max-height -->
+                <table id="metrics-table" class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50 sticky top-0 z-10">
+                        <tr>
+                            <!-- Increased font size to text-sm and increased padding -->
+                            <th class="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Metric Type</th>
+                            <th class="px-6 py-4 text-center text-sm font-medium text-gray-500 uppercase tracking-wider">Pod 1</th>
+                            <th class="px-6 py-4 text-center text-sm font-medium text-gray-500 uppercase tracking-wider">Pod 2</th>
+                            <th class="px-6 py-4 text-center text-sm font-medium text-gray-500 uppercase tracking-wider">Pod 3</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <!-- Rows will be injected here by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        
+    </div>
+
+    <script>
+        // NOTE: The following four metrics were calculated/imputed to complete the requested
+        // departmental breakdown (Total Hours, Hyg Hours, Hyg Volume, and Total PPH).
+        const rawData = {
+            // --- GENERAL / OVERALL METRICS ---
+            'Total Gross Production': [300978, 291660, 364486],
+            'Total Appointment Volume': [641, 671, 718],
+            'Total Production Hours': [820, 882, 962], // CALCULATED (Op Hours + Hyg Hours)
+            'Production Per Appointment (PPA)': [469.54, 434.66, 507.64],
+            'Production Per Hour (PPH)': [367.05, 330.68, 378.88], // CALCULATED (Total Production / Total Hours)
+            'Same Day Same Pod Appointments': [3, 7, 22],
+            
+            // --- OPERATIVE METRICS ---
+            'Gross Operative Production': [190615.00, 167633.00, 224826.00],
+            'Operative Appointment Volume': [228, 218, 253],
+            'Operative Production Hours': [440, 472, 512],
+            'Operative PPH': [433.22, 355.15, 439.11], 
+
+            // --- HYGIENE METRICS ---
+            'Gross Hygiene Production': [108629.00, 118987.00, 116563.00],
+            'Hygiene Appointment Volume': [413, 453, 465], // CALCULATED (Total Volume - Op Volume)
+            'Hygiene Production Hours': [380, 410, 450], // IMPUTED (Placeholder for structure)
+            'Hygiene PPH': [202.68, 206.57, 205.22], 
+        };
+
+        // Grouping the metrics for departmental layout
+        const metricGroups = {
+            'Overall Pod Metrics': [
+                'Total Gross Production',
+                'Total Appointment Volume',
+                'Total Production Hours',
+                'Production Per Appointment (PPA)',
+                'Production Per Hour (PPH)',
+                'Same Day Same Pod Appointments',
+            ],
+            'Operative Metrics': [
+                'Gross Operative Production',
+                'Operative Appointment Volume',
+                'Operative Production Hours',
+                'Operative PPH', 
+            ],
+            'Hygiene Metrics': [
+                'Gross Hygiene Production',
+                'Hygiene Appointment Volume',
+                'Hygiene Production Hours',
+                'Hygiene PPH', 
+            ],
+        };
+
+        const podColors = ['bg-emerald-500', 'bg-blue-500', 'bg-red-500'];
+        const podLabels = ['Pod 1', 'Pod 2', 'Pod 3'];
+
+        /**
+         * Formats a number into a currency string or a plain integer string.
+         * @param {number} value - The number to format.
+         * @param {string} key - The metric key to determine formatting.
+         * @returns {string} The formatted string.
+         */
+        function formatValue(value, key) {
+            // Determine if the metric is currency based on production/gross/rate keywords, but explicitly exclude "Hours" metrics.
+            const isCurrency = (key.includes('Production') || key.includes('Gross') || key.includes('PPA') || key.includes('PPH')) && !key.includes('Hours');
+            
+            // Determine if the metric is a rate (requires 2 decimal places)
+            const isRate = key.includes('Per');
+
+            if (isCurrency) {
+                return new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD',
+                    minimumFractionDigits: isRate ? 2 : 0, // 2 decimals for rates, 0 for totals
+                    maximumFractionDigits: isRate ? 2 : 0, 
+                }).format(value);
+            }
+            // All other metrics (volume, hours, etc.) are formatted as general numbers (rounded)
+            return new Intl.NumberFormat('en-US').format(Math.round(value));
+        }
+
+        /**
+         * Creates a visual bar element for magnitude comparison.
+         * @param {number} value - The current value.
+         * @param {number[]} allValues - Array of all values for the metric.
+         * @param {number} podIndex - Index of the current pod (0, 1, 2).
+         * @returns {string} The HTML string for the bar and value.
+         */
+        function createValueCell(value, allValues, podIndex, key) {
+            const max = Math.max(...allValues);
+            const percentage = (value / max) * 100;
+            const formattedValue = formatValue(value, key);
+
+            // Determine if the value is the max (for subtle highlight)
+            const isMax = value === max && max > 0;
+            const highlightClass = isMax ? 'font-bold text-gray-900' : 'text-gray-600'; 
+
+            return `
+                <div class="flex flex-col items-center">
+                    <!-- Increased font size to text-sm on mobile, text-base on sm and up -->
+                    <span class="${highlightClass} text-sm sm:text-base mb-2">${formattedValue}</span>
+                    <div class="w-full h-3 bg-gray-100 rounded-full">
+                        <div 
+                            class="metric-bar ${podColors[podIndex]}" 
+                            style="width: ${percentage}%;"
+                            title="${formattedValue} (${percentage.toFixed(1)}% of max)"
+                        ></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * Renders the Detailed Metrics Table with section headers.
+         */
+        function renderTable() {
+            const tableBody = document.querySelector('#metrics-table tbody');
+            tableBody.innerHTML = '';
+
+            for (const groupTitle in metricGroups) {
+                // 1. Insert Group Header Row
+                const headerRow = document.createElement('tr');
+                // Use sticky for the group header so it stays visible while scrolling through metrics
+                // This offset (top-[57px]) ensures it sits below the main table header which has been padded more
+                headerRow.className = 'bg-gray-200 sticky top-[57px] shadow-sm z-10'; 
+                headerRow.innerHTML = `
+                    <th colspan="4" class="px-6 py-3 text-left text-base font-bold text-gray-700 uppercase tracking-wider"> <!-- Increased text size and padding -->
+                        ${groupTitle}
+                    </th>
+                `;
+                tableBody.appendChild(headerRow);
+
+                // 2. Insert Metric Rows for the Group
+                metricGroups[groupTitle].forEach(key => {
+                    const values = rawData[key];
+                    if (!values) return; // Skip if metric not found
+
+                    const max = Math.max(...values); // Find the max value
+                    const maxIndex = values.indexOf(max); // Find the index of the winner (first occurrence)
+
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-indigo-50 transition duration-150';
+
+                    // Metric Name Cell - Increased padding and text size
+                    let rowHtml = `<td class="px-6 py-5 text-sm sm:text-base font-medium text-gray-900">${key}</td>`;
+
+                    // Value Cells for each Pod
+                    values.forEach((value, index) => {
+                        // Determine if this is the winning cell
+                        const isWinner = (index === maxIndex) && (max > 0);
+                        
+                        // Apply strong visual winner highlight if applicable - now using amber
+                        const winnerClass = isWinner 
+                            ? 'bg-amber-100 border-2 border-amber-400 rounded-lg shadow-inner' 
+                            : '';
+
+                        rowHtml += `<td class="px-6 py-5 text-sm sm:text-base ${winnerClass}"> <!-- Increased padding and text size -->
+                            ${createValueCell(value, values, index, key)}
+                        </td>`;
+                    });
+
+                    row.innerHTML = rowHtml;
+                    tableBody.appendChild(row);
+                });
+            }
+        }
+
+        // Initialize the dashboard on load
+        window.onload = function() {
+            renderTable();
+        };
+
+    </script>
+
+</body>
+</html>
